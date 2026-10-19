@@ -2,21 +2,23 @@ name: Öğlen Otomatik Ürün Güncelleme
 
 on:
   schedule:
-    - cron: '0 9 * * *' # Türkiye saatiyle her gün tam 12:00'de çalışır
-  workflow_dispatch: # GitHub üzerinden manuel olarak da tetiklenebilmesi için
+    - cron: '0 9 * * *' 
+  workflow_dispatch: 
 
 jobs:
   scrape-and-update:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write # Botun dosyayı kaydedebilmesi için gerekli yazma izni
 
     steps:
       - name: Depoyu Çek
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4 # Hata vermemesi için v4'e yükseltildi
 
       - name: Node.js Kurulumu
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4 # Hata vermemesi için v4'e yükseltildi
         with:
-          node-version: '18'
+          node-version: '20'
 
       - name: Gerekli Paketleri Yükle
         run: npm install
