@@ -27,29 +27,47 @@ async function scrapeProducts() {
                 img = $(el).parent().find('img').first();
             }
             
-            let imgUrl = img.attr('src') || img.attr('data-src') || '';
-            let title = img.attr('alt') || $(el).attr('title') || '';
+            let imgUrl = img.attr('src');
+            if (!imgUrl) imgUrl = img.attr('data-src');
+            if (!imgUrl) imgUrl = '';
+            
+            let title = img.attr('alt');
+            if (!title) title = $(el).attr('title');
+            if (!title) title = '';
 
-            // Sitedeki ilana ait asıl metin/fiyat değerini çekiyoruz
-            let rawDescription = $(el).text() \vert{}\vert{}$(el).parent().text() || '';
+            let rawDescription = $(el).text();
+            if (!rawDescription) rawDescription = $(el).parent().text();
+            if (!rawDescription) rawDescription = '';
 
-            if (url.length > 5 && imgUrl.length > 5 && (title.trim().length > 3 || rawDescription.trim().length > 3)) {
+            let kontrolGecerli = false;
+            if (title.trim().length > 3) kontrolGecerli = true;
+            if (rawDescription.trim().length > 3) kontrolGecerli = true;
+
+            if (url.length > 5 && imgUrl.length > 5 && kontrolGecerli) {
                 
                 if(!title) title = rawDescription.substring(0, 40);
 
-                // Başlık kuralları
                 let cleanTitle = title.toLowerCase().replace(/\s+/g, ' ').trim();
-                cleanTitle = cleanTitle.replace(/ruhsatlı|ruhsat|/g, ''); 
-                cleanTitle = cleanTitle.replace(/k[iİı]a/g, 'KIA');
+                cleanTitle = cleanTitle.replace(/ruhsatlı/g, ''); 
+                cleanTitle = cleanTitle.replace(/ruhsat/g, ''); 
+                cleanTitle = cleanTitle.replace(/kia/g, 'KIA');
+                cleanTitle = cleanTitle.replace(/kİa/g, 'KIA');
+                cleanTitle = cleanTitle.replace(/kıa/g, 'KIA');
                 cleanTitle = cleanTitle.replace(/20 yıl/g, ''); 
 
-                // İlan metni kuralları
                 let cleanDesc = rawDescription.replace(/\s+/g, ' ').trim();
-                cleanDesc = cleanDesc.replace(/orijinal|ruhsatlı|ruhsat|sıfır sandık/gi, '');
-                cleanDesc = cleanDesc.replace(/K[İiı]A/gi, 'KIA');
+                cleanDesc = cleanDesc.replace(/ruhsatlı/gi, '');
+                cleanDesc = cleanDesc.replace(/ruhsat/gi, '');
+                cleanDesc = cleanDesc.replace(/kia/gi, 'KIA');
+                cleanDesc = cleanDesc.replace(/kİa/gi, 'KIA');
+                cleanDesc = cleanDesc.replace(/kıa/gi, 'KIA');
                 cleanDesc = cleanDesc.replace(/20 yıl/gi, ''); 
 
-                if (cleanDesc === cleanTitle || cleanDesc.length < 5) {
+                if (cleanDesc === cleanTitle) {
+                    cleanDesc = "Stoklarımızdadır.";
+                }
+                
+                if (cleanDesc.length < 5) {
                     cleanDesc = "Stoklarımızdadır.";
                 }
 
