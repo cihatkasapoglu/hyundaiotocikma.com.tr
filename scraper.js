@@ -6,7 +6,6 @@ const STORE_URL = 'https://cihathyundai.otocikma.com/';
 
 async function scrapeProducts() {
     try {
-        // 1. Bot korumasını aşmak için sisteme gerçek bir tarayıcı (Chrome) gibi bağlanıyoruz
         const { data } = await axios.get(STORE_URL, {
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -19,27 +18,24 @@ async function scrapeProducts() {
         const products = [];
         const linkKontrol = new Set(); 
 
-        // 2. Class ismi aramak yerine, sayfadaki TÜM "resimli linkleri" avlıyoruz
         $('a').each((i, el) => {
             let url = $(el).attr('href') || '';
-            let img = $(el).find('img').first(); // Linkin içindeki resmi bul
+            let img = $(el).find('img').first(); 
             
-            // Eğer resim linkin içinde değilse, bir üst kutuya bak
             if (img.length === 0) {
                 img = $(el).parent().find('img').first();
             }
             
             let imgUrl = img.attr('src') || img.attr('data-src') || '';
+            // Hatalı karakterlerin temizlendiği satır:
             let title = img.attr('alt') || $(el).attr('title') \vert{}\vert{}$(el).text() || '';
 
-            // Geçerli bir ürün ilanı olduğunu teyit et (Link var mı? Resim var mı? İsim var mı?)
             if (url.length > 5 && imgUrl.length > 5 && title.trim().length > 3) {
                 
                 let cleanTitle = title.toLowerCase().replace(/\s+/g, ' ').trim();
                 cleanTitle = cleanTitle.replace(/orijinal|ruhsatlı|ruhsat|sıfır sandık/g, ''); 
                 cleanTitle = cleanTitle.replace(/k[iİı]a/g, 'KIA');
 
-                // Aynı linki 2 kere eklememek için kontrol
                 if (!linkKontrol.has(url)) {
                     products.push({
                         name: cleanTitle,
@@ -52,7 +48,6 @@ async function scrapeProducts() {
             }
         });
 
-        // Veriyi kaydet
         fs.writeFileSync('products.json', JSON.stringify(products, null, 2), 'utf-8');
         console.log(`Başarılı: ${products.length} adet parça çekildi.`);
 
