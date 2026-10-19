@@ -19,28 +19,36 @@ async function scrapeProducts() {
         const linkKontrol = new Set(); 
 
         $('a').each((i, el) => {
-            let url = $(el).attr('href') || '';
-            let img = $(el).find('img').first(); 
+            let url = $(el).attr('href');
+            if (!url) url = '';
             
+            let img = $(el).find('img').first(); 
             if (img.length === 0) {
                 img = $(el).parent().find('img').first();
             }
             
-            let imgUrl = img.attr('src') || img.attr('data-src') || '';
-            // Hatalı karakterlerin temizlendiği satır:
-            let title = img.attr('alt') || $(el).attr('title') \vert{}\vert{}$(el).text() || '';
+            let imgUrl = img.attr('src');
+            if (!imgUrl) imgUrl = img.attr('data-src');
+            if (!imgUrl) imgUrl = '';
+            
+            let title = img.attr('alt');
+            if (!title) title = $(el).attr('title');
+            if (!title) title = $(el).text();
+            if (!title) title = '';
 
             if (url.length > 5 && imgUrl.length > 5 && title.trim().length > 3) {
-                
                 let cleanTitle = title.toLowerCase().replace(/\s+/g, ' ').trim();
                 cleanTitle = cleanTitle.replace(/orijinal|ruhsatlı|ruhsat|sıfır sandık/g, ''); 
                 cleanTitle = cleanTitle.replace(/k[iİı]a/g, 'KIA');
 
                 if (!linkKontrol.has(url)) {
+                    let finalImg = imgUrl.startsWith('http') ? imgUrl : 'https://www.otocikma.com' + imgUrl;
+                    let finalLink = url.startsWith('http') ? url : 'https://cihathyundai.otocikma.com' + url;
+                    
                     products.push({
                         name: cleanTitle,
-                        image: imgUrl.startsWith('http') ? imgUrl : 'https://www.otocikma.com' + imgUrl,
-                        link: url.startsWith('http') ? url : 'https://cihathyundai.otocikma.com' + url,
+                        image: finalImg,
+                        link: finalLink,
                         location: 'ostim'
                     });
                     linkKontrol.add(url);
