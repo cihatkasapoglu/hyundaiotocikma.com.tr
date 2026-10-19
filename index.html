@@ -491,7 +491,6 @@ async function urunleriYukle() {
     const products = await response.json();
     const container = document.getElementById('productsContainer');
     
-    // Yükleniyor yazısını temizle
     container.innerHTML = '';
 
     if(products.length === 0) {
@@ -499,17 +498,14 @@ async function urunleriYukle() {
       return;
     }
 
-    // Her bir ürünü tek tek oluştur ve sayfaya ekle
     products.forEach(product => {
       const card = document.createElement('div');
       card.className = 'product-card';
       
-      // Resim varsa koy, yoksa yer tutucu koy
       let imageHtml = product.image 
         ? `<img src="${product.image}" alt="${product.name}">` 
         : `<span class="placeholder-text">Fotoğraf Yok</span>`;
       
-      // WhatsApp hazır mesajı için başlığı düzenle
       let waMessage = encodeURIComponent(`Merhaba, "${product.name}" hakkında bilgi almak istiyorum.`);
 
       card.innerHTML = `
@@ -518,7 +514,7 @@ async function urunleriYukle() {
         </div>
         <div class="product-info">
           <div class="product-name">${product.name}</div>
-          <div class="product-desc">Ostim teslim motor parçası.</div>
+          <div class="product-desc">${product.description}</div>
           <a href="https://wa.me/905537383806?text=${waMessage}" target="_blank" class="btn-incele">WhatsApp'tan Sor</a>
           <a href="${product.link}" target="_blank" class="btn-incele btn-magaza">Mağazada İncele</a>
         </div>
@@ -534,7 +530,6 @@ async function urunleriYukle() {
   }
 }
 
-// Sayfa yüklendiğinde ürünleri çekmeye başla
 document.addEventListener('DOMContentLoaded', urunleriYukle);
 </script>
 </body>
