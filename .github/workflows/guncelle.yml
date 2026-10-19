@@ -1,0 +1,33 @@
+name: Öğlen Otomatik Ürün Güncelleme
+
+on:
+  schedule:
+    - cron: '0 9 * * *' # Türkiye saatiyle her gün tam 12:00'de çalışır
+  workflow_dispatch: # GitHub üzerinden manuel olarak da tetiklenebilmesi için
+
+jobs:
+  scrape-and-update:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Depoyu Çek
+        uses: actions/checkout@v3
+
+      - name: Node.js Kurulumu
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Gerekli Paketleri Yükle
+        run: npm install
+
+      - name: Botu Çalıştır ve Verileri Çek
+        run: node scraper.js
+
+      - name: Değişiklikleri GitHub'a Kaydet (Commit & Push)
+        run: |
+          git config --global user.name "GitHub Actions Bot"
+          git config --global user.email "actions@github.com"
+          git add products.json
+          git commit -m "Öğlen otomatik ürün güncellemesi" || echo "Değişiklik yok"
+          git push
