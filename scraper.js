@@ -6,30 +6,49 @@ const STORE_URL = 'https://cihathyundai.otocikma.com/';
 
 async function scrapeProducts() {
     try {
-        const { data } = await axios.get(STORE_URL);
+        // 1. Bot korumasını aşmak için sisteme gerçek bir tarayıcı (Chrome) gibi bağlanıyoruz
+        const { data } = await axios.get(STORE_URL, {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'tr-TR,tr;q=0.9,en-US;q=0.8,en;q=0.7'
+            }
+        });
+        
         const $ = cheerio.load(data);
         const products = [];
+        const linkKontrol = new Set(); 
 
-        // Otocikma.com HTML yapısını daha geniş tarayalım
-        $('.ilan-karti, .product-item, .listing-item, .card').each((i, el) => {
-            let rawTitle = $(el).find('.ilan-baslik, .product-title, h3, .title').text() || '';
-            let imgUrl = $(el).find('img').attr('src') || '';
-            let url = $(el).find('a').first().attr('href') || '';
+        // 2. Class ismi aramak yerine, sayfadaki TÜM "resimli linkleri" avlıyoruz
+        $('a').each((i, el) => {
+            let url = $(el).attr('href') || '';
+            let img = $(el).find('img').first(); // Linkin içindeki resmi bul
+            
+            // Eğer resim linkin içinde değilse, bir üst kutuya bak
+            if (img.length === 0) {
+                img = $(el).parent().find('img').first();
+            }
+            
+            let imgUrl = img.attr('src') || img.attr('data-src') || '';
+            let title = img.attr('alt') || $(el).attr('title') \vert{}\vert{}$(el).text() || '';
 
-            // Metin düzenlemeleri (Sizin kurallarınız)
-            let title = rawTitle.toLowerCase(); 
-            title = title.replace(/orijinal|ruhsatlı|ruhsat/g, ''); 
-            title = title.replace(/k[iİı]a/g, 'KIA'); 
-            title = title.replace(/\s+/g, ' ').trim(); 
+            // Geçerli bir ürün ilanı olduğunu teyit et (Link var mı? Resim var mı? İsim var mı?)
+            if (url.length > 5 && imgUrl.length > 5 && title.trim().length > 3) {
+                
+                let cleanTitle = title.toLowerCase().replace(/\s+/g, ' ').trim();
+                cleanTitle = cleanTitle.replace(/orijinal|ruhsatlı|ruhsat|sıfır sandık/g, ''); 
+                cleanTitle = cleanTitle.replace(/k[iİı]a/g, 'KIA');
 
-            // Başlık boş değilse listeye ekle (motor kelimesi şartını kaldırdık)
-            if(title.length > 3) {
-                products.push({
-                    name: title,
-                    image: imgUrl.startsWith('http') ? imgUrl : 'https://www.otocikma.com' + imgUrl,
-                    link: url.startsWith('http') ? url : 'https://www.otocikma.com' + url,
-                    location: 'ostim'
-                });
+                // Aynı linki 2 kere eklememek için kontrol
+                if (!linkKontrol.has(url)) {
+                    products.push({
+                        name: cleanTitle,
+                        image: imgUrl.startsWith('http') ? imgUrl : 'https://www.otocikma.com' + imgUrl,
+                        link: url.startsWith('http') ? url : 'https://cihathyundai.otocikma.com' + url,
+                        location: 'ostim'
+                    });
+                    linkKontrol.add(url);
+                }
             }
         });
 
