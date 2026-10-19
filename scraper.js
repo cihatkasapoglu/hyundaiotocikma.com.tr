@@ -10,32 +10,32 @@ async function scrapeProducts() {
         const $ = cheerio.load(data);
         const products = [];
 
-        // Otocikma.com üzerindeki ilan listesi
-        $('.ilan-karti, .product-item').each((i, el) => {
-            let rawTitle = $(el).find('.ilan-baslik, .product-title').text() || '';
+        // Otocikma.com HTML yapısını daha geniş tarayalım
+        $('.ilan-karti, .product-item, .listing-item, .card').each((i, el) => {
+            let rawTitle = $(el).find('.ilan-baslik, .product-title, h3, .title').text() || '';
             let imgUrl = $(el).find('img').attr('src') || '';
-            let url = $(el).find('a').attr('href') || '';
+            let url = $(el).find('a').first().attr('href') || '';
 
-            // Kurallarınıza göre metin düzenlemeleri
-            let title = rawTitle.toLowerCase(); // Başlıklar küçük harf
-            title = title.replace(/orijinal|ruhsatlı|ruhsat/g, ''); // İstenmeyen kelimeleri temizle
-            title = title.replace(/k[iİı]a/g, 'KIA'); // KIA marka yazım düzeltmesi
-            title = title.replace(/\s+/g, ' ').trim(); // Fazla boşlukları sil
+            // Metin düzenlemeleri (Sizin kurallarınız)
+            let title = rawTitle.toLowerCase(); 
+            title = title.replace(/orijinal|ruhsatlı|ruhsat/g, ''); 
+            title = title.replace(/k[iİı]a/g, 'KIA'); 
+            title = title.replace(/\s+/g, ' ').trim(); 
 
-            // Sadece motor ile ilgili parçaları al
-            if(title && title.includes('motor')) {
+            // Başlık boş değilse listeye ekle (motor kelimesi şartını kaldırdık)
+            if(title.length > 3) {
                 products.push({
                     name: title,
-                    image: imgUrl,
-                    link: url.startsWith('http') ? url : STORE_URL + url,
-                    location: 'ostim' // Lokasyon Ostim olarak sabitlendi
+                    image: imgUrl.startsWith('http') ? imgUrl : 'https://www.otocikma.com' + imgUrl,
+                    link: url.startsWith('http') ? url : 'https://www.otocikma.com' + url,
+                    location: 'ostim'
                 });
             }
         });
 
-        // Çekilen veriyi products.json dosyasına kaydet
+        // Veriyi kaydet
         fs.writeFileSync('products.json', JSON.stringify(products, null, 2), 'utf-8');
-        console.log(`Başarılı: ${products.length} adet motor parçası çekildi.`);
+        console.log(`Başarılı: ${products.length} adet parça çekildi.`);
 
     } catch (error) {
         console.error('Hata oluştu:', error.message);
